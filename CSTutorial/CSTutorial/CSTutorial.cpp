@@ -8,6 +8,7 @@
 #include "glog/logging.h"
 
 using ceres::AutoDiffCostFunction;
+using ceres::NumericDiffCostFunction;
 using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solver;
@@ -25,6 +26,13 @@ struct CostFunctor {
 	}
 };
 
+struct NumericDiffCostFunctor{
+	bool operator()(const double * const x, double * residual)const{
+		residual[0]= 10.0-x[0];
+		return true;
+	}
+};
+
 int main(int argc, char** argv) {
 	google::InitGoogleLogging(argv[0]);
 
@@ -36,10 +44,18 @@ int main(int argc, char** argv) {
 	// Build the problem.
 	Problem problem;
 
+/*************************************************************************************/
 	// Set up the only cost function (also known as residual). This uses
 	// auto-differentiation to obtain the derivative (jacobian).
-	CostFunction* cost_function =
-		new AutoDiffCostFunction<CostFunctor, 1, 1>(new CostFunctor);
+// 	CostFunction* cost_function =
+// 		new AutoDiffCostFunction<CostFunctor, 1, 1>(new CostFunctor);
+// 	problem.AddResidualBlock(cost_function, NULL, &x);
+
+/*************************************************************************************/
+	//This uses numberic-differentiation to obtain the derivative (jacobian).
+	CostFunction * cost_function=
+		new NumericDiffCostFunction<NumericDiffCostFunctor, ceres::CENTRAL, 1, 1>(
+		new NumericDiffCostFunctor);
 	problem.AddResidualBlock(cost_function, NULL, &x);
 
 	// Run the solver!
